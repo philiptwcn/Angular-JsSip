@@ -1,27 +1,16 @@
 # JsSipAngular
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.0.4.
+This project is served as a intergration testing for [FreeSWITCH](https://freeswitch.com/) version 1.10.5 with [JsSip](https://jssip.net/) version 3.5.8, and was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.0.4.
 
-## Development server
+This project has only contained frontend webpage, to get full functionality, the installation of [FreeSWITCH](https://freeswitch.com/) is needed.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+## Development Usage
 
-## Code scaffolding
-
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
-
-## Build
-
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
-
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+Run `npm init` then `npm start` to start the project. Navigate to `https://localhost:4200/`. The app will automatically reload if you change any of the source files.
 
 ## Further help
 
+To get further information, check out [FreeSWITCH wiki](https://freeswitch.org/confluence/display/FREESWITCH/FreeSWITCH+First+Steps), or [JsSip documentation](https://jssip.net/documentation/).
+
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+
