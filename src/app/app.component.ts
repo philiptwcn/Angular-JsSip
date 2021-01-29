@@ -4,6 +4,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import * as JsSIP from 'jssip';
 import { RTCSession, RTCSessionEventMap, IncomingEvent, OutgoingEvent, EndEvent, PeerConnectionEvent, ConnectingEvent, SDPEvent } from 'jssip/lib/RTCSession';
 import { CallOptions, RTCSessionEvent, IncomingMessageEvent, OutgoingMessageEvent } from 'jssip/lib/UA';
+import { of, Observable } from 'rxjs';
+import { find, first, map, skipUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -12,8 +14,8 @@ import { CallOptions, RTCSessionEvent, IncomingMessageEvent, OutgoingMessageEven
 })
 export class AppComponent implements AfterViewInit {
   title = 'JsSip-Angular';
-  @ViewChild('localAudio')  public localAudioElement: ElementRef;
-  @ViewChild('remoteAudio')  public remoteAudioElement: ElementRef;
+  @ViewChild('localAudio') public localAudioElement: ElementRef;
+  @ViewChild('remoteAudio') public remoteAudioElement: ElementRef;
 
   showLocalAudio = false;
   showRemoteAudio = false;
@@ -26,6 +28,9 @@ export class AppComponent implements AfterViewInit {
   incomingStreams: MediaStream[];
   incomingStream: MediaStream;
   userAgent: JsSIP.UA;
+  inputDeviceList: MediaDeviceInfo[];
+  outputDeviceList: MediaDeviceInfo[];
+  ua$: Observable<JsSIP.UA>;
 
   UAForm = this.fb.group({
     sipURI: [],
@@ -62,6 +67,7 @@ export class AppComponent implements AfterViewInit {
     peerconnection: (e: PeerConnectionEvent) => {
       console.log('%cOn peerconnection', 'color:black;background-color:orange', e);
       this.openSnackBar('on peerconnection', null, { duration: 3000 });
+      console.log('state', e.peerconnection.getStats());
       e.peerconnection.ontrack = (ev: RTCTrackEvent) => {
         console.log('onaddtrack from remote - ', ev);
         this.remoteAudio.srcObject = ev.streams[0];
@@ -81,6 +87,8 @@ export class AppComponent implements AfterViewInit {
   };
 
   constructor(private snackBar: MatSnackBar, private fb: FormBuilder) {
+    console.log('device found', this.getConnectedDevices('audioinput'));
+    console.log('device found', this.getConnectedDevices('audiooutput'));
   }
 
   ngAfterViewInit(): void {
@@ -92,6 +100,11 @@ export class AppComponent implements AfterViewInit {
       console.log('getUserMedia() error: ' + error);
       this.openSnackBar('Get User Media Error', 'confirm');
     }
+    // Listen for changes to media devices and update the list accordingly
+    navigator.mediaDevices.addEventListener('devicechange', event => {
+      this.getConnectedDevices('audioinput');
+      this.getConnectedDevices('audiooutput');
+    });
   }
 
   gotLocalMedia(stream: MediaStream): void {
@@ -108,13 +121,23 @@ export class AppComponent implements AfterViewInit {
     this.gotLocalMedia(stream);
   }
 
+  getConnectedDevices = async (type: string) => {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    if (type === 'audioinput') {
+      return this.inputDeviceList = devices.filter(device => device.kind === type);
+    }
+    if (type === 'audiooutput') {
+      return this.outputDeviceList = devices.filter(device => device.kind === type);
+    }
+  }
+
   testStart(): void {
     console.log(
       '%cget input info: ', 'color:black;background-color:lightgreen', '\n',
       'sip_uri = ', this.UAForm.get('sipURI').value, '\n',
       'sip_password = ', this.UAForm.get('sipPassword').value, '\n',
       'ws_uri = ', this.UAForm.get('wsURI').value
-      );
+    );
 
     const socket = new JsSIP.WebSocketInterface(this.UAForm.get('wsURI').value);
     const configuration = {
@@ -141,7 +164,7 @@ export class AppComponent implements AfterViewInit {
     this.userAgent.on('registrationFailed', (unRegisteredEvent) => {
       console.log('registrationFailed, ', unRegisteredEvent);
       this.openSnackBar(`registrationFailed`, 'confirm');
-      // console.warn("registrationFailed, ", data.response.status_code, ",", data.response.reason_phrase, " cause - ", data.cause);
+      console.warn('registrationFailed, ', unRegisteredEvent.response.status_code, ',', unRegisteredEvent.response.reason_phrase, ' cause - ', unRegisteredEvent.cause);
     });
 
     this.userAgent.on('registrationExpiring', () => {
@@ -233,10 +256,15 @@ export class AppComponent implements AfterViewInit {
 
 
   testCall(): void {
+    this.testStart();
     const sipPhoneNumber = this.UAForm.get('sipPhoneNumber').value;
     const options: CallOptions = this.callOptions;
-
-    this.outgoingSession = this.userAgent.call(sipPhoneNumber, options);
+    this.ua$ = of(this.userAgent);
+    this.ua$.pipe(
+      find(x => x.isRegistered())
+    ).subscribe(() => {
+      this.outgoingSession = this.userAgent.call(sipPhoneNumber, options);
+    });
   }
 
   // answer(): void {

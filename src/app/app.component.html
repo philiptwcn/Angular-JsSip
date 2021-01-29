@@ -30,12 +30,12 @@
 
   <mat-card-actions>
     <div class="btngroup">
-      <button mat-fab matTooltip="Get User Media" color="basic" (click)="captureLocalMedia()">
+      <button mat-fab matTooltip="Get User Media" color="basic" *ngIf="!localStream" (click)="captureLocalMedia()">
         <mat-icon>playlist_add</mat-icon>
       </button>
-      <button mat-fab matTooltip="User Register" color="primary" (click)="testStart()">
+      <!-- <button mat-fab matTooltip="User Register" color="primary" (click)="testStart()">
         <mat-icon>person_add</mat-icon>
-      </button>
+      </button> -->
       <button mat-fab matTooltip="Call" color="accent" (click)="testCall()">
         <mat-icon>call</mat-icon>
       </button>
@@ -49,10 +49,11 @@
   </mat-card-actions>
 
   <mat-divider></mat-divider>
-
   <div class="audiogroup">
     <div class="player">
       <mat-label for="localAudio">Local media stream</mat-label>
+      <br>
+      <span *ngIf="inputDeviceList">{{inputDeviceList[0].label}}</span>
       <br>
       <mat-label class="errorLabel" *ngIf="!showLocalAudio">Get User Media Error, No Local Audio</mat-label>
       <br>
@@ -60,6 +61,8 @@
     </div>
     <div class="player">
       <mat-label for="remoteAudio">Call media stream</mat-label>
+      <br>
+      <span *ngIf="outputDeviceList">{{outputDeviceList[0].label}}</span>
       <br>
       <mat-label class="errorLabel" *ngIf="!showRemoteAudio">No Remote Audio</mat-label>
       <br>
