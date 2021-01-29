@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import * as JsSIP from 'jssip';
@@ -10,7 +10,7 @@ import { CallOptions, RTCSessionEvent, IncomingMessageEvent, OutgoingMessageEven
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements AfterViewInit {
   title = 'JsSip-Angular';
   @ViewChild('localAudio')  public localAudioElement: ElementRef;
   @ViewChild('remoteAudio')  public remoteAudioElement: ElementRef;
@@ -184,6 +184,13 @@ export class AppComponent {
           console.log('accepted setCurrentSession - ', this.currentSession);
         }
       });
+      sessionEvent.session.on('ended', (event: EndEvent) => {
+        console.log('%conEnded - ', 'color:white;background-color:red', event);
+        if (event.originator === 'remote') {
+          this.currentSession = null;
+          this.showRemoteAudio = false;
+        }
+      })
       sessionEvent.session.on('confirmed', (event: IncomingEvent | OutgoingEvent) => {
         console.log('%conConfirmed - ', 'color:black;background-color:lightgreen', event);
         if (event.originator === 'remote' && this.currentSession == null) {
